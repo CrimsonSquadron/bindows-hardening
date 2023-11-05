@@ -65,6 +65,16 @@ auditpol /set /category:"DS Access","Object Access" /failure:enable
 Get-Package -Provider Programs -IncludeWindowsInstaller -Name “Wireshark”
 Uninstall-Package -Name “Wireshark”
 
+#Task 13: Enable Windows Firewall
+Set-NetFirewallProfile -Profile Domain, Public, Private -Enabled True
+
+#Task 14: Disable Remote Assistance
+Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" -Name "fAllowToGetHelp"
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" -Name "fAllowToGetHelp" -Value 0
+gpupdate /force
+Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" -Name "fAllowToGetHelp"
+
+
 # Task 20: Updates!
 # Install-Module PSWindowsUpdate
 # Add-WUServiceManager -MicrosoftUpdate
