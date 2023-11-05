@@ -25,7 +25,7 @@ $exportPath = "C:\security-settings.inf"
 secedit /export /cfg $exportPath
 $content = Get-Content -Path $exportPath
 $content = $content -replace "(?<=MaximumPasswordAge\s*=\s*).*", "90"
-$content = $content -replace "(?<=MinimumwPasswordAge\s*=\s*).*", "10"
+$content = $content -replace "(?<=MinimumPasswordAge\s*=\s*).*", "10"
 $content = $content -replace "(?<=LockoutDuration\s*=\s*).*", "30"
 $content = $content -replace "(?<=LimitBlankPasswordUse\s*=\s*).*", "1"
 $content = $content -replace "(?<=MinimumPasswordLength\s*=\s*).*", "4"
@@ -88,24 +88,20 @@ Auditpol /set /subcategory:"System Integrity" /success:enable /failure:enable
 auditpol /set /category:"System","Account Management","Account Logon","Logon/Logoff","Policy Change" /failure:enable /success:enable  
 auditpol /set /category:"DS Access","Object Access" /failure:enable
 
-# Task 10: Remove any junk apps
-Get-Package -Provider Programs -IncludeWindowsInstaller -Name “Wireshark”
-Uninstall-Package -Name “Wireshark”
-
-#Task 11: Enable Windows Firewall
+#Task 10: Enable Windows Firewall
 Set-NetFirewallProfile -Profile Domain, Public, Private -Enabled True
 
-#Task 12: Disable Remote Assistance
+#Task 11: Disable Remote Assistance
 Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" -Name "fAllowToGetHelp"
 Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" -Name "fAllowToGetHelp" -Value 0
 Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" -Name "fAllowToGetHelp"
 
-#Task 13: Misc 
+#Task 12: Misc 
 Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" -Name "AutoShareWks" -Value 0
 Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" -Name "AutoShareServer" -Value 0
 Restart-Service -Name 'LanmanServer'
 
-#Task 14: Firewall updates!
+#Task 13: Firewall updates!
 netsh Advfirewall set allprofiles state on
 netsh advfirewall firewall add rule name="Block appvlp.exe netconns" program="C:\Program Files (x86)\Microsoft Office\root\client\AppVLP.exe" protocol=tcp dir=out enable=yes action=block profile=any
 netsh advfirewall firewall add rule name="Block appvlp.exe netconns" program="C:\Program Files\Microsoft Office\root\client\AppVLP.exe" protocol=tcp dir=out enable=yes action=block profile=any
@@ -162,7 +158,7 @@ netsh advfirewall firewall add rule name="Block wscript.exe netconns" program="%
 netsh advfirewall firewall add rule name="Block wscript.exe netconns" program="%systemroot%\SysWOW64\wscript.exe" protocol=tcp dir=out enable=yes action=block profile=any
 netsh Advfirewall set allprofiles state on
 
-# Task 15: Updates!
-# Install-Module PSWindowsUpdate
-# Add-WUServiceManager -MicrosoftUpdate
-#   Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -AutoReboot | Out-File "C:\($env.computername-Get-Date -f yyyy-MM-dd)-MSUpdates.log" -Force
+# Task 14: Updates!
+Install-Module PSWindowsUpdate
+Add-WUServiceManager -MicrosoftUpdate
+Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -AutoReboot | Out-File "C:\($env.computername-Get-Date -f yyyy-MM-dd)-MSUpdates.log" -Force
