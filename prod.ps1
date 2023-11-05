@@ -26,10 +26,17 @@ Set-Service -Name "ftpsvc" -StartupType "Disabled"
 # Remove-LocalGroupMember -Group administrators -Member $iroh
 
 # Task 9: Password Age, etc
-Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "MaxPasswordAge" -Value 90
-Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "MinPasswordAge" -Value 10
-Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "MinimumPasswordLength" -Value 4
-Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "PasswordComplexity" -Value 1
+$exportPath = "C:\security-settings.inf"
+secedit /export /cfg $exportPath
+$content = Get-Content -Path $exportPath
+$content = $content -replace "(?<=MaximumPasswordAge\s*=\s*).*", "90"
+$content = $content -replace "(?<=MinPasswordAge\s*=\s*).*", "10"
+$content = $content -replace "(?<=MinimumPasswordLength\s*=\s*).*", "4"
+$content = $content -replace "(?<=PasswordComplexity\s*=\s*).*", "1"
+
+Set-Content -Path $exportPath -Value $content
+secedit /configure /db C:\windows\security\local.sdb /cfg $exportPath /areas SECURITYPOLICY
+
 
 #Task 10: Registry Changes
 powershell.exe Disable-WindowsOptionalFeature -Online -FeatureName smb1protocol -norestart
@@ -40,7 +47,7 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v RestrictAnonymousSAM /t R
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v RestrictAnonymous /t REG_DWORD /d 1 /f
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v EveryoneIncludesAnonymous /t REG_DWORD /d 0 /f
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v RestrictRemoteSAM /t REG_SZ /d "O:BAG:BAD:(A;;RC;;;BA)" /f
-reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v UseMachineId /t REG_DWORD /d 1 /f
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v UseMachireneId /t REG_DWORD /d 1 /f
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v LimitBlankPasswordUse /t REG_DWORD /d 1 /f
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\LSA\MSV1_0" /v allownullsessionfallback /t REG_DWORD /d 0 /f
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanWorkstation\Parameters" /v EnableSecuritySignature /t REG_DWORD /d 1 /f
@@ -162,3 +169,13 @@ netsh Advfirewall set allprofiles state on
 # Install-Module PSWindowsUpdate
 # Add-WUServiceManager -MicrosoftUpdate
 #   Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -AutoReboot | Out-File "C:\($env.computername-Get-Date -f yyyy-MM-dd)-MSUpdates.log" -Force
+
+
+
+$exportPath = "C:\security-settings.inf"
+secedit /export /cfg $exportPath
+$content = Get-Content -Path $exportPath
+$content = $content -replace "(?<=MaximumPasswordAge\s*=\s*).*", "90"
+Set-Content -Path $exportPath -Value $content
+secedit /configure /db C:\windows\security\local.sdb /cfg $exportPath /areas SECURITYPOLICY
+Remove-Item -Path $exportPath
