@@ -1,3 +1,8 @@
+# Created by Matthew Dudzinski on Oct. 23rd, 2023
+# For use in Windows NT 1908, 1909, 22H2, 23H2, and beyond.
+# Updated infrequently. Commands may damage your system I am not liable for any damages done to machines.
+
+
 # Task 1: Disable the Guest account (Disable-LocalUser)
 Disable-LocalUser -Name "Guest"
 
