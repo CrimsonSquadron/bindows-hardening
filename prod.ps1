@@ -25,7 +25,7 @@ $exportPath = "C:\security-settings.inf"
 secedit /export /cfg $exportPath
 $content = Get-Content -Path $exportPath
 $content = $content -replace "(?<=MaximumPasswordAge\s*=\s*).*", "90"
-$content = $content -replace "(?<=MinPasswordAge\s*=\s*).*", "10"
+$content = $content -replace "(?<=MinimumwPasswordAge\s*=\s*).*", "10"
 $content = $content -replace "(?<=LockoutDuration\s*=\s*).*", "30"
 $content = $content -replace "(?<=LimitBlankPasswordUse\s*=\s*).*", "1"
 $content = $content -replace "(?<=MinimumPasswordLength\s*=\s*).*", "4"
