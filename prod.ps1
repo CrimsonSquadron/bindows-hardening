@@ -1,26 +1,26 @@
-# Task 1: Disable the Guest account
+# Task 1: Disable the Guest account (Disable-LocalUser)
 Disable-LocalUser -Name "Guest"
 
-# Task 2: Enable the Windows Update Service
+# Task 2: Enable the Windows Update Service (Set-Service, Start-Service)
 Set-Service -Name "wuauserv" -StartupType "Automatic"
 Start-Service -Name "wuauserv"
 
-# Task 3: Disable the Microsoft FTP Service
+# Task 3: Disable the Microsoft FTP Service (Set-Service)
 Set-Service -Name "ftpsvc" -Status "Stopped"
 Set-Service -Name "ftpsvc" -StartupType "Disabled"
 
-# Task 4: Remove unauthorized users from the machine
+# Task 4: Remove unauthorized users from the machine (Remove LocalUser)
 #Remove-LocalUser -Name "PLACEHOLDER"
 #Remove-LocalUser -Name "PLACEHOLDER"
 
-# Task 5: Add User tonraq 
+# Task 5: Add User tonraq (New-LocalUser)
 #New-LocalUser -Name "PLACEHOLDER" -Password "S3CureP@ssw0rd2001"
 
-# Task 6 : Remove unauthorized Administrators
+# Task 6 : Remove unauthorized Administrators (Local-GroupMember)
 # Remove-LocalGroupMember -Group administrators -Member $iroh
 
 
-# Task 7: Local Security Policy Changes, etc
+# Task 7: Local Security Policy Changes, etc (secedit)
 $exportPath = "C:\security-settings.inf"
 secedit /export /cfg $exportPath
 $content = Get-Content -Path $exportPath
@@ -30,12 +30,11 @@ $content = $content -replace "(?<=LockoutDuration\s*=\s*).*", "30"
 $content = $content -replace "(?<=LimitBlankPasswordUse\s*=\s*).*", "1"
 $content = $content -replace "(?<=MinimumPasswordLength\s*=\s*).*", "4"
 $content = $content -replace "(?<=PasswordComplexity\s*=\s*).*", "1"
-
 Set-Content -Path $exportPath -Value $content
 secedit /configure /db C:\windows\security\local.sdb /cfg $exportPath /areas SECURITYPOLICY
 
 
-#Task 8: Registry Changes
+#Task 8: Registry Changes (reg add)
 powershell.exe Disable-WindowsOptionalFeature -Online -FeatureName smb1protocol -norestart
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\mrxsmb10" /v Start /t REG_DWORD /d 4 /f
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /v SMB1 /t REG_DWORD /d 0 /f
@@ -88,20 +87,20 @@ Auditpol /set /subcategory:"System Integrity" /success:enable /failure:enable
 auditpol /set /category:"System","Account Management","Account Logon","Logon/Logoff","Policy Change" /failure:enable /success:enable  
 auditpol /set /category:"DS Access","Object Access" /failure:enable
 
-#Task 10: Enable Windows Firewall
+#Task 10: Enable Windows Firewall (Set-NetFirewallProfile)
 Set-NetFirewallProfile -Profile Domain, Public, Private -Enabled True
 
-#Task 11: Disable Remote Assistance
+#Task 11: Disable Remote Assistance (Get-ItemProperty)
 Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" -Name "fAllowToGetHelp"
 Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" -Name "fAllowToGetHelp" -Value 0
 Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" -Name "fAllowToGetHelp"
 
-#Task 12: Misc 
+#Task 12: Misc (Set-ItemProperty)
 Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" -Name "AutoShareWks" -Value 0
 Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" -Name "AutoShareServer" -Value 0
 Restart-Service -Name 'LanmanServer'
 
-#Task 13: Firewall updates!
+#Task 13: Firewall Configuration (netsh)
 netsh Advfirewall set allprofiles state on
 netsh advfirewall firewall add rule name="Block appvlp.exe netconns" program="C:\Program Files (x86)\Microsoft Office\root\client\AppVLP.exe" protocol=tcp dir=out enable=yes action=block profile=any
 netsh advfirewall firewall add rule name="Block appvlp.exe netconns" program="C:\Program Files\Microsoft Office\root\client\AppVLP.exe" protocol=tcp dir=out enable=yes action=block profile=any
@@ -158,7 +157,7 @@ netsh advfirewall firewall add rule name="Block wscript.exe netconns" program="%
 netsh advfirewall firewall add rule name="Block wscript.exe netconns" program="%systemroot%\SysWOW64\wscript.exe" protocol=tcp dir=out enable=yes action=block profile=any
 netsh Advfirewall set allprofiles state on
 
-# Task 14: Updates!
+# Task 14: Updates (Windows Update)
 Install-Module PSWindowsUpdate
 Add-WUServiceManager -MicrosoftUpdate
 Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -AutoReboot | Out-File "C:\($env.computername-Get-Date -f yyyy-MM-dd)-MSUpdates.log" -Force
