@@ -1,36 +1,33 @@
 # Task 1: Disable the Guest account
 Disable-LocalUser -Name "Guest"
 
-# Task 2: Ensure a secure account lockout duration exists
-Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "LockoutDuration" -Value 30
-
-# Task 3: Limit local use of blank passwords to console only
-Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "LimitBlankPasswordUse" -Value 1
-
-# Task 4: Enable the Windows Update Service
+# Task 2: Enable the Windows Update Service
 Set-Service -Name "wuauserv" -StartupType "Automatic"
 Start-Service -Name "wuauserv"
 
-# Task 5: Disable the Microsoft FTP Service
+# Task 3: Disable the Microsoft FTP Service
 Set-Service -Name "ftpsvc" -Status "Stopped"
 Set-Service -Name "ftpsvc" -StartupType "Disabled"
 
-# Task 6: Remove unauthorized users from the machine
+# Task 4: Remove unauthorized users from the machine
 #Remove-LocalUser -Name "PLACEHOLDER"
 #Remove-LocalUser -Name "PLACEHOLDER"
 
-# Task 7: Add User tonraq 
+# Task 5: Add User tonraq 
 #New-LocalUser -Name "PLACEHOLDER" -Password "S3CureP@ssw0rd2001"
 
-# Task 8 : Remove unauthorized Administrators
+# Task 6 : Remove unauthorized Administrators
 # Remove-LocalGroupMember -Group administrators -Member $iroh
 
-# Task 9: Password Age, etc
+
+# Task 7: Local Security Policy Changes, etc
 $exportPath = "C:\security-settings.inf"
 secedit /export /cfg $exportPath
 $content = Get-Content -Path $exportPath
 $content = $content -replace "(?<=MaximumPasswordAge\s*=\s*).*", "90"
 $content = $content -replace "(?<=MinPasswordAge\s*=\s*).*", "10"
+$content = $content -replace "(?<=LockoutDuration\s*=\s*).*", "30"
+$content = $content -replace "(?<=LimitBlankPasswordUse\s*=\s*).*", "1"
 $content = $content -replace "(?<=MinimumPasswordLength\s*=\s*).*", "4"
 $content = $content -replace "(?<=PasswordComplexity\s*=\s*).*", "1"
 
@@ -38,7 +35,7 @@ Set-Content -Path $exportPath -Value $content
 secedit /configure /db C:\windows\security\local.sdb /cfg $exportPath /areas SECURITYPOLICY
 
 
-#Task 10: Registry Changes
+#Task 8: Registry Changes
 powershell.exe Disable-WindowsOptionalFeature -Online -FeatureName smb1protocol -norestart
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\mrxsmb10" /v Start /t REG_DWORD /d 4 /f
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /v SMB1 /t REG_DWORD /d 0 /f
@@ -75,7 +72,7 @@ reg add "HKLM\SOFTWARE\Policies\Google\Chrome" /v "TLS13HardeningForLocalAnchors
 reg add "HKLM\SOFTWARE\Policies\Google\Chrome" /v "VideoCaptureAllowed" /t REG_DWORD /d 0 /f
 
 
-# Task 11: Audit Policy (AuditPol)
+# Task 9: Audit Policy (AuditPol)
 Auditpol /set /subcategory:"Security Group Management" /success:enable /failure:enable
 Auditpol /set /subcategory:"Process Creation" /success:enable /failure:enable
 Auditpol /set /subcategory:"Logoff" /success:enable /failure:disable
@@ -91,24 +88,24 @@ Auditpol /set /subcategory:"System Integrity" /success:enable /failure:enable
 auditpol /set /category:"System","Account Management","Account Logon","Logon/Logoff","Policy Change" /failure:enable /success:enable  
 auditpol /set /category:"DS Access","Object Access" /failure:enable
 
-# Task 12: Remove any junk apps
+# Task 10: Remove any junk apps
 Get-Package -Provider Programs -IncludeWindowsInstaller -Name “Wireshark”
 Uninstall-Package -Name “Wireshark”
 
-#Task 13: Enable Windows Firewall
+#Task 11: Enable Windows Firewall
 Set-NetFirewallProfile -Profile Domain, Public, Private -Enabled True
 
-#Task 14: Disable Remote Assistance
+#Task 12: Disable Remote Assistance
 Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" -Name "fAllowToGetHelp"
 Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" -Name "fAllowToGetHelp" -Value 0
 Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" -Name "fAllowToGetHelp"
 
-#Task 15: Misc 
+#Task 13: Misc 
 Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" -Name "AutoShareWks" -Value 0
 Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" -Name "AutoShareServer" -Value 0
 Restart-Service -Name 'LanmanServer'
 
-#Task 16: Firewall updates!
+#Task 14: Firewall updates!
 netsh Advfirewall set allprofiles state on
 netsh advfirewall firewall add rule name="Block appvlp.exe netconns" program="C:\Program Files (x86)\Microsoft Office\root\client\AppVLP.exe" protocol=tcp dir=out enable=yes action=block profile=any
 netsh advfirewall firewall add rule name="Block appvlp.exe netconns" program="C:\Program Files\Microsoft Office\root\client\AppVLP.exe" protocol=tcp dir=out enable=yes action=block profile=any
@@ -165,17 +162,7 @@ netsh advfirewall firewall add rule name="Block wscript.exe netconns" program="%
 netsh advfirewall firewall add rule name="Block wscript.exe netconns" program="%systemroot%\SysWOW64\wscript.exe" protocol=tcp dir=out enable=yes action=block profile=any
 netsh Advfirewall set allprofiles state on
 
-# Task 1: Updates!
+# Task 15: Updates!
 # Install-Module PSWindowsUpdate
 # Add-WUServiceManager -MicrosoftUpdate
 #   Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -AutoReboot | Out-File "C:\($env.computername-Get-Date -f yyyy-MM-dd)-MSUpdates.log" -Force
-
-
-
-$exportPath = "C:\security-settings.inf"
-secedit /export /cfg $exportPath
-$content = Get-Content -Path $exportPath
-$content = $content -replace "(?<=MaximumPasswordAge\s*=\s*).*", "90"
-Set-Content -Path $exportPath -Value $content
-secedit /configure /db C:\windows\security\local.sdb /cfg $exportPath /areas SECURITYPOLICY
-Remove-Item -Path $exportPath
