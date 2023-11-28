@@ -3,6 +3,7 @@
 # Updated infrequently. Commands may damage your system I am not liable for any damages done to machines.
 
 
+
 # Task 1: Disable the Guest account (Disable-LocalUser)
 Disable-LocalUser -Name "Guest"
 
@@ -166,3 +167,6 @@ netsh Advfirewall set allprofiles state on
 Install-Module PSWindowsUpdate
 Add-WUServiceManager -MicrosoftUpdate
 Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -AutoReboot | Out-File "C:\($env.computername-Get-Date -f yyyy-MM-dd)-MSUpdates.log" -Force
+
+# Task 15: Megascript starts here. (combo of online scripts, Other)
+#Added Nov 28th, 2023 By Matthew Dudzinski ()
